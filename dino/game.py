@@ -53,7 +53,7 @@ class Game:
         return canvasRunner.toDataURL().substring(22)"
         image_b64 = self.driver.execute_script(getbase64Script)
         img = np.array(Image.open(BytesIO(base64.b64decode(image_b64))))
-        img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+        img = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2GRAY)
         img = img[:300, :500]
         img = cv2.resize(img, (80, 80))
         return img
