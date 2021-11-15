@@ -1,6 +1,12 @@
+import base64
 import os
+from io import BytesIO
+from typing import Final
 
+import cv2
+import numpy as np
 import pandas as pd
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
@@ -43,13 +49,17 @@ class Game:
         self.driver.close()
 
     def grab_image(self):
-        img = self.driver.get_screenshot_as_png()
-        img = img[:300, :500]
+        getbase64Script = "canvasRunner = document.getElementById('runner-canvas'); \
+        return canvasRunner.toDataURL().substring(22)"
+        image_b64 = self.driver.execute_script(getbase64Script)
+        img = np.array(Image.open(BytesIO(base64.b64decode(image_b64))))
         img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-        img = cv2.resize(img, (84, 84))
+        img = img[:300, :500]
+        img = cv2.resize(img, (80, 80))
         return img
 
     def show_image(self, img):
+        img = cv2.resize(img, (800, 400))
         cv2.imshow('image', img)
         if(cv2.waitKey(1) & 0xFF == ord('q')):
             self.end()
@@ -57,6 +67,10 @@ class Game:
 
 
 class Env:
+    ACTIONS_OF_NOTHING: Final = 0
+    ACTIONS_OF_JUMP: Final = 1
+    ACTIONS_COUNT: Final = 2
+
     def __init__(self, agent):
         self.agent = agent
 
@@ -76,20 +90,32 @@ class Env:
         self.q_values_df = pd.read_csv(q_value_file_path) \
             if os.path.isfile(q_value_file_path) else pd.DataFrame(columns=['qvalues'])
 
+    def _log_score(self, score):
+        self.scores_df.loc[len(self.scores_df)] = score
+
     def reset(self):
         self.agent.jump()
 
-    def step(self, actions):
-        self.actions_df.loc[len(self.actions_df)] = actions[1]
+    def step(self, actions: [bool, bool]):
+        '''
+        actions:
+            [duck, jump]
+
+        return:
+            [img, reward, is_game_over]
+        '''
+        is_jump = actions[self.ACTIONS_OF_JUMP]
+
+        self.actions_df.loc[self.ACTIONS_OF_JUMP] = is_jump
         score = self.agent.get_score()
         reward = 0.1
         is_game_over = False
         agent = self.agent
-        if actions[1] == 1:
+        if is_jump:
             agent.jump()
         img = agent.grab_image()
         if agent.is_crashed():
-            self.scores_df.loc[len(self.scores_df)] = score
+            self._log_score(score)
             reward = -1
             is_game_over = True
             agent.restart()
@@ -105,5 +131,11 @@ if __name__ == '__main__':
     for i in range(10):
         sleep(1)
         agent.jump()
-        
+
+        actions_of_t = np.zeros(env.ACTIONS_COUNT)
+        actions_of_t[env.ACTIONS_OF_JUMP] = True
+        observation, reward_of_t, terminated = env.step(actions_of_t)
+        agent.show_image(img=observation)
+
+    cv2.destroyAllWindows()
     agent.end()
