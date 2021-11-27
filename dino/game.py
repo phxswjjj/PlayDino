@@ -1,6 +1,7 @@
 import base64
 import os
 from io import BytesIO
+from time import sleep
 from typing import Final
 
 import cv2
@@ -38,7 +39,7 @@ class Game:
         self.driver.find_element_by_tag_name("body").send_keys(Keys.ARROW_UP)
 
     def duck(self):
-        self.driver.find_element_by_tag_name("body").send_keys(Keys.SPACE)
+        self.driver.find_element_by_tag_name("body").send_keys(Keys.ARROW_DOWN)
 
     def get_score(self):
         score_ary = self.driver.execute_script(
@@ -114,6 +115,7 @@ class Env:
                 action_index = i
                 break
         
+        delay_sec = [0, 0.5, 0][action_index]
         todo = [agent.duck, agent.jump, lambda: None][action_index]
 
         score = agent.get_score()
@@ -121,6 +123,8 @@ class Env:
         is_game_over = False
         
         todo()
+        if delay_sec>0:
+            sleep(delay_sec)
 
         img = agent.grab_image()
         if agent.is_crashed():
