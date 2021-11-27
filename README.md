@@ -1,5 +1,5 @@
 ## require
-* installed [chromedriver](https://chromedriver.chromium.org/downloads)
+* [chromedriver](https://chromedriver.chromium.org/downloads)
 * python 3.9
 
 ## usage

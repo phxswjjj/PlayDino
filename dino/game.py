@@ -67,9 +67,10 @@ class Game:
 
 
 class Env:
-    ACTIONS_OF_NOTHING: Final = 0
+    ACTIONS_OF_DUCK: Final = 0
     ACTIONS_OF_JUMP: Final = 1
-    ACTIONS_COUNT: Final = 2
+    ACTIONS_OF_NA: Final = 2
+    ACTIONS_COUNT: Final = 3
 
     def __init__(self, agent):
         self.agent = agent
@@ -96,23 +97,31 @@ class Env:
     def reset(self):
         self.agent.jump()
 
-    def step(self, actions: [bool, bool]):
+    def step(self, actions: [bool, bool, bool]):
         '''
         actions:
-            [duck, jump]
+            [duck, jump, nothing]
 
         return:
             [img, reward, is_game_over]
         '''
-        is_jump = actions[self.ACTIONS_OF_JUMP]
+        agent = self.agent
 
-        self.actions_df.loc[self.ACTIONS_OF_JUMP] = is_jump
-        score = self.agent.get_score()
+        action_index = self.ACTIONS_OF_NA
+        for i, act in enumerate(actions):
+            if act:
+                self.actions_df.loc[len(self.actions_df)] = i
+                action_index = i
+                break
+        
+        todo = [agent.duck, agent.jump, lambda: None][action_index]
+
+        score = agent.get_score()
         reward = 0.1
         is_game_over = False
-        agent = self.agent
-        if is_jump:
-            agent.jump()
+        
+        todo()
+
         img = agent.grab_image()
         if agent.is_crashed():
             self._log_score(score)
