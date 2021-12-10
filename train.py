@@ -10,6 +10,7 @@ from dino.game import Env, Game
 from dino.model import create_model
 
 OBJECTS_DIR = 'objects'
+PLAYED_HISTORY_LENGTH = 5000
 
 
 def load_obj(name):
@@ -51,7 +52,7 @@ def train_model(model, env):
 
     played_history = load_data()
 
-    # init actions state=nothing=[False, False], 0-index is duck, 1-index is jump, 2-index is nothing
+    # init actions state, 0-index is duck, 1-index is jump, 2-index is nothing
     default_actions = np.zeros(env.ACTIONS_COUNT)
     # game start by jump
     default_actions[env.ACTIONS_OF_JUMP] = True
@@ -65,15 +66,15 @@ def train_model(model, env):
     images_of_prev_t = images_of_t
     images_of_t0 = images_of_t
 
-    t = 0
+    t = len(played_history)
     while t < 1e4:
         actions_of_t = np.zeros(env.ACTIONS_COUNT)
         reward_of_t = 0
-        action_index = 0
 
         # random action: 0=duck or 1=jump, 2=nothing
         action_index = random.randrange(env.ACTIONS_COUNT)
         actions_of_t[action_index] = True
+        print(datetime.now(), ['duck', 'jump', 'nothing'][action_index])
 
         # observation_img is 80*80
         observation_img, reward_of_t, terminated = env.step(actions_of_t)
@@ -82,7 +83,8 @@ def train_model(model, env):
         images_of_t = np.append(observation_img, images_of_t[:, :, :, :3], axis=3)
         data = (images_of_t, action_index, reward_of_t, actions_of_t)
         played_history.append(data)
-        print(datetime.now(), ['duck', 'jump', 'nothing'][action_index])
+        if len(played_history) > PLAYED_HISTORY_LENGTH:
+            played_history.popleft()
 
         # if terminated, reset frame
         images_of_prev_t = images_of_t0 if terminated else images_of_t

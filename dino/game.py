@@ -11,6 +11,7 @@ from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
 
 
 class Game:
@@ -39,7 +40,11 @@ class Game:
         self.driver.find_element_by_tag_name("body").send_keys(Keys.ARROW_UP)
 
     def duck(self):
-        self.driver.find_element_by_tag_name("body").send_keys(Keys.ARROW_DOWN)
+        # self.driver.find_element_by_tag_name("body").send_keys(Keys.ARROW_DOWN)
+        action = ActionChains(self.driver)
+        action.key_down(Keys.ARROW_DOWN).perform()
+        sleep(0.5)
+        action.key_up(Keys.ARROW_DOWN).perform()
 
     def get_score(self):
         score_ary = self.driver.execute_script(
