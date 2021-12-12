@@ -1,12 +1,17 @@
 
+import os
+
 from keras.callbacks import TensorBoard
 from keras.layers.convolutional import Conv2D, MaxPooling2D
 from keras.layers.core import Activation, Dense, Dropout, Flatten
-from keras.models import Sequential, model_from_json
+from keras.models import Sequential, model_from_json, load_model
 from tensorflow.keras.optimizers import SGD, Adam
 
 
 def create_model():
+    if os.path.exists('model'):
+        return load_model('model')
+
     model = Sequential()
     # 卷積層: 80*80*4 to 20*20*32
     # filter=濾波器數量, kernel_size=濾波器大小

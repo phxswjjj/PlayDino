@@ -128,8 +128,8 @@ class Env:
         is_game_over = False
         
         todo()
-        if delay_sec>0:
-            sleep(delay_sec)
+        # if delay_sec>0:
+        #     sleep(delay_sec)
 
         img = agent.grab_image()
         if agent.is_crashed():
@@ -139,6 +139,9 @@ class Env:
             agent.restart()
         return img, reward, is_game_over
 
+    def end(self):
+        self.agent.end()
+        
 
 if __name__ == '__main__':
     agent = Game()

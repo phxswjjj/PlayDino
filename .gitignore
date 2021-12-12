@@ -1,3 +1,5 @@
 *.exe
 __pycache__/
 objects/
+model/
+model.h5
